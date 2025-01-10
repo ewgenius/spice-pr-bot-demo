@@ -49,6 +49,7 @@ jobs:
       - name: Run Spice
         run: |
           echo "$HOME/.spice/bin" >> $GITHUB_PATH
+          spice i ai
           spice run &> spice.log &
           sleep 5
 
