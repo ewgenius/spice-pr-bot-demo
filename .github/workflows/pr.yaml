@@ -8,27 +8,28 @@ on:
       - '*'
 
 jobs:
-  # check_pr:
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     hasOpenPR: ${{ steps.check_pr.outputs.hasOpenPR }}
+  check_pr:
+    runs-on: ubuntu-latest
+    outputs:
+      hasOpenPR: ${{ steps.check_pr.outputs.hasOpenPR }}
 
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  #     - name: Check existing PR for current branch
-  #       id: check_pr
-  #       env:
-  #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       run: |
-  #         branch=$(git rev-parse --abbrev-ref HEAD)
-  #         pr_count=$(gh pr list --state open --head "$branch" --json number --jq 'length')
-  #         echo "::set-output name=hasOpenPR::$( [ $pr_count -gt 0 ] && echo true || echo false )"
+      - name: Check existing PR for current branch
+        id: check_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          branch=$(git rev-parse --abbrev-ref HEAD)
+          pr_count=$(gh pr list --state open --head "$branch" --json number --jq 'length')
+          echo "::set-output name=hasOpenPR::$( [ $pr_count -gt 0 ] && echo true || echo false )"
 
   create_pr:
     runs-on: ubuntu-latest
-    if: github.ref_type == 'branch' && github.event.base_ref == null
+    needs: check_pr
+    if: ${{ needs.check_pr.outputs.hasOpenPR == 'false' }}
 
     steps:
       - name: Checkout code
