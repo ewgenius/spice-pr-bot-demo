@@ -38,9 +38,9 @@ jobs:
       - name: Get branch diff
         run: |
           default_branch=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
-          git fetch origin $default_branch
+          git fetch origin $default_branch --unshallow
           branch=$(git rev-parse --abbrev-ref HEAD)
-          git diff origin/$default_branch...$branch --patch --stat --output=diff.patch
+          git diff origin/$default_branch...origin/$branch --patch --stat --output=diff.patch
 
       - name: Install Spice
         run: |
