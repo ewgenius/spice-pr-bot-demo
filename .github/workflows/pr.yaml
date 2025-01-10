@@ -29,7 +29,7 @@ jobs:
   create_pr:
     runs-on: ubuntu-latest
     needs: check_pr
-    # if: ${{ needs.check_pr.outputs.hasOpenPR == 'false' }}
+    if: ${{ needs.check_pr.outputs.hasOpenPR == 'false' }}
 
     steps:
       - name: Checkout code
@@ -74,6 +74,13 @@ jobs:
           description=$(echo $json_content | jq -r '.description')
           echo "Title: $title"
           echo "Description: $description"
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          branch=$(git rev-parse --abbrev-ref HEAD)
+          gh pr create --title "$title" --body "$description" --head "$branch" --base main
 
       - name: Stop spice and check logs
         if: always()
