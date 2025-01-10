@@ -12,17 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       hasOpenPR: ${{ steps.check_pr.outputs.hasOpenPR }}
-      defaultBranch: ${{ steps.get_default_branch.outputs.defaultBranch }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Get default branch
-        id: get_default_branch
-        run: |
-          default_branch=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
-          echo "::set-output name=defaultBranch::$default_branch"
 
       - name: Check existing PR for current branch
         id: check_pr
@@ -41,6 +34,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Get branch diff
+        run: |
+          default_branch=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
+          git fetch origin $default_branch --depth=1
+          branch=$(git rev-parse --abbrev-ref HEAD)
+          it diff origin/$default_branch...$branch --patch --stat --output=diff.patch
 
       - name: Install Spice
         run: |
@@ -64,15 +64,6 @@ jobs:
         run: |
           bash -c 'while [[ "$(curl -s http://localhost:8090/health)" != "ok" ]]; do sleep 1; done' || false
         timeout-minutes: 1
-
-      - name: Get branch diff
-        run: |
-          git fetch origin ${{ needs.check_pr.outputs.defaultBranch }} --depth=1
-          branch=$(git rev-parse --abbrev-ref HEAD)
-          diff=$(git diff origin/${{ needs.check_pr.outputs.defaultBranch }}...$branch)
-          echo "$diff" > diff.txt
-          cat diff.txt
-          echo "::set-output name=diff::$diff"
 
       - name: Stop spice and check logs
         if: always()

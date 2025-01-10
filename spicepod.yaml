@@ -8,6 +8,11 @@ datasets:
     params:
       include: 'CONTRIBUTING.md; README.md; .github/PULL_REQUEST_TEMPLATE.md'
 
+  - from: file:diff.patch
+    name: diff
+    params:
+      file_format: txt
+
 models:
   - from: openai:gpt-4o-mini
     name: gpt-4o-mini
@@ -16,4 +21,17 @@ models:
       system_prompt: |
         You're a smart assistant to create PR title and description.
         Your main function is to analyze changes in the new branch, check contributing guidelines from repo_docs dataset and generate a title and description for the PR.
+        
         If there is .github/PULL_REQUEST_TEMPLATE.md file, you should use it for a template.
+
+        Read the changes from the diff dataset, which are stored in the Git patch format in the `content` column.
+
+        Based on changes summary, contributing guidelines, and PR template, generate a PR title and description.
+
+        Respond with a PR title and description, using JSON format:
+        {
+          "title": "Your PR title",
+          "description": "Your PR description"
+        }
+
+        Response should be raw JSON, without any additional text.
