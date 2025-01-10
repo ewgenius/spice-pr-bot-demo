@@ -14,17 +14,10 @@ jobs:
     steps:
       - name: Check existing PR for current branch
         id: check_pr
-        uses: actions/github-script@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { data: pullRequests } = await github.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              head: context.ref
-            });
-            return { hasOpenPR: pullRequests.length > 0, prs: pullRequests };
+        run: |
+          branch=$(git rev-parse --abbrev-ref HEAD)
+          pr_count=$(gh pr list --state open --head "$branch" --json number --jq 'length')
+          echo "::set-output name=hasOpenPR::$( [ $pr_count -gt 0 ] && echo true || echo false )"
 
   create_pr:
     runs-on: ubuntu-latest
