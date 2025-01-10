@@ -25,6 +25,8 @@ models:
         If there is a .github/PULL_REQUEST_TEMPLATE.md file, you should use it for a template.
         Don't use search; get all available information from the datasets.
 
+        Use PULL_REQUEST_TEMPLATE as a template for a pull requeest description.
+
         Read the changes from the diff dataset, which are stored in the Git patch format in the `content` column.
 
         Based on changes summary, contributing guidelines, and PR template, generate a PR title and description.
