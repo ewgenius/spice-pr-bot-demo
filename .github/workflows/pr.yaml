@@ -58,6 +58,14 @@ jobs:
           bash -c 'while [[ "$(curl -s http://localhost:8090/health)" != "ok" ]]; do sleep 1; done' || false
         timeout-minutes: 1
 
+      - name: Get branch diff
+        run: |
+          branch=$(git rev-parse --abbrev-ref HEAD)
+          diff=$(git diff origin/main...$branch)
+          echo "$diff" > diff.txt
+          cat diff.txt
+          echo "::set-output name=diff::$diff"
+
       - name: Stop spice and check logs
         if: always()
         run: |
