@@ -81,9 +81,8 @@ jobs:
           echo "description=$description" >> $GITHUB_OUTPUT
           
           branch=$(git rev-parse --abbrev-ref HEAD)
-          gh pr create --title "$title" --head "$branch" --base main
-
-          pr_number=$(gh pr list --state open --head "$branch" --json number --jq '.[0].number')
+          pr_url=$(gh pr create --title "$title" --body "<>" --head "$branch" --base main --json url --jq '.url')
+          pr_number=$(basename $pr_url)
           gh pr edit $pr_number --body "$description"
 
       - name: Stop spice and check logs
