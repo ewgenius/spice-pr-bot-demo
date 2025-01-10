@@ -12,6 +12,9 @@ jobs:
       hasOpenPR: ${{ steps.check_pr.outputs.hasOpenPR }}
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Check existing PR for current branch
         id: check_pr
         run: |
