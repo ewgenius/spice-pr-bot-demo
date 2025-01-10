@@ -36,9 +36,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Spice
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl https://install.spiceai.org | /bin/bash
 
@@ -47,6 +44,9 @@ jobs:
           echo "$HOME/.spice/bin" >> $GITHUB_PATH
 
       - name: Run Spice
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "$HOME/.spice/bin" >> $GITHUB_PATH
           spice i ai
