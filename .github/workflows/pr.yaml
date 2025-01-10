@@ -65,10 +65,8 @@ jobs:
           bash -c 'while [[ "$(curl -s http://localhost:8090/health)" != "ok" ]]; do sleep 1; done' || false
         timeout-minutes: 1
 
-      - name: Call Spice runtime and parse response and create PR
+      - name: Call Spice runtime and parse response
         id: parse_response
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           response=$(curl -XPOST -s http://localhost:8090/v1/chat/completions -H "Content-Type: application/json" -d '{ "stream": false, "model": "gpt-4o", "response_format": { "type": "json_object" }, "messages": [{"role": "user", "content" : "summarize changes"}] }')
           content=$(echo $response | jq -r '.choices[0].message.content')
@@ -77,13 +75,9 @@ jobs:
           description=$(echo $json_content | jq -r '.description')
           echo "Title: $title"
           echo "Description: $description"
-          echo "title=$title" >> $GITHUB_OUTPUT
-          echo "description=$description" >> $GITHUB_OUTPUT
-          
+          default_branch=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
           branch=$(git rev-parse --abbrev-ref HEAD)
-          pr_url=$(gh pr create --title "$title" --body "<>" --head "$branch" --base main --json url --jq '.url')
-          pr_number=$(basename $pr_url)
-          gh pr edit $pr_number --body "$description"
+          gh pr create --title "$title" --body "$description" --head "$branch" --base "$default_branch"
 
       - name: Stop spice and check logs
         if: always()
