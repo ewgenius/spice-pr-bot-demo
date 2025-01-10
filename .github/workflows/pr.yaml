@@ -41,6 +41,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl https://install.spiceai.org | /bin/bash
+
+      - name: Add Spice to PATH
+        run: |
+          echo "$HOME/.spice/bin" >> $GITHUB_PATH
+
+      - name: Run Spice
+        run: |
           echo "$HOME/.spice/bin" >> $GITHUB_PATH
           spice run &> spice.log &
           sleep 5
