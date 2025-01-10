@@ -72,9 +72,14 @@ jobs:
         run: |
           response=$(curl -XPOST -s http://localhost:8090/v1/chat/completions -H "Content-Type: application/json" -d '{ "stream": false, "model": "gpt-4o", "response_format": { "type": "json_object" }, "messages": [{"role": "user", "content" : "summarize changes"}] }')
           content=$(echo $response | jq -r '.choices[0].message.content')
+          echo $content
           json_content=$(echo $content | jq -r '.')
           title=$(echo $json_content | jq -r '.title')
           description=$(echo $json_content | jq -r '.description')
+          if [ -z "$title" ] || [ -z "$description" ]; then
+            echo "Error: Title or description is empty"
+            exit 1
+          fi
           echo "Title: $title"
           echo "Description: $description"
           default_branch=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
