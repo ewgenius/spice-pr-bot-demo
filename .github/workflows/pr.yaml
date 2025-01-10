@@ -33,9 +33,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # - name: Install Spice
-      #   run: |
-      #     curl https://install.spiceai.org | /bin/bash
+      - name: Install Spice
+        run: |
+          curl https://install.spiceai.org | /bin/bash
 
       # - name: Run Spicepod
       #   run: |
