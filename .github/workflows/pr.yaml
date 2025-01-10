@@ -66,6 +66,7 @@ jobs:
         timeout-minutes: 1
 
       - name: Call Spice runtime and parse response
+        id: parse_response
         run: |
           response=$(curl -XPOST -s http://localhost:8090/v1/chat/completions -H "Content-Type: application/json" -d '{ "stream": false, "model": "gpt-4o", "response_format": { "type": "json_object" }, "messages": [{"role": "user", "content" : "summarize changes"}] }')
           content=$(echo $response | jq -r '.choices[0].message.content')
@@ -74,13 +75,15 @@ jobs:
           description=$(echo $json_content | jq -r '.description')
           echo "Title: $title"
           echo "Description: $description"
+          echo "title=$title" >> $GITHUB_OUTPUT
+          echo "description=$description" >> $GITHUB_OUTPUT
 
       - name: Create Pull Request
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           branch=$(git rev-parse --abbrev-ref HEAD)
-          gh pr create --title "$title" --body "$description" --head "$branch" --base main
+          gh pr create --title "${{ steps.parse_response.outputs.pr_title }}" --body "${{ steps.parse_response.outputs.pr_description }}" --head "$branch" --base main
 
       - name: Stop spice and check logs
         if: always()
