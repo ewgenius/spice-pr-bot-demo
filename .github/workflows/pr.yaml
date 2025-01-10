@@ -67,7 +67,7 @@ jobs:
 
       - name: Get branch diff
         run: |
-          git fetch origin ${{ needs.check_pr.outputs.defaultBranch }}
+          git fetch origin ${{ needs.check_pr.outputs.defaultBranch }} --depth=1
           branch=$(git rev-parse --abbrev-ref HEAD)
           diff=$(git diff origin/${{ needs.check_pr.outputs.defaultBranch }}...$branch)
           echo "$diff" > diff.txt
