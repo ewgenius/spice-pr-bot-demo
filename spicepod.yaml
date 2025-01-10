@@ -1,0 +1,19 @@
+version: v1
+kind: Spicepod
+name: spiceai-theo-pr-bot
+
+datasets:
+  - from: github:github.com/ewgenius/spice-pr-bot-demo/files/main
+    name: repo_docs
+    params:
+      include: 'CONTRIBUTING.md; README.md; .github/PULL_REQUEST_TEMPLATE.md'
+
+models:
+  - from: openai:gpt-4o-mini
+    name: gpt-4o-mini
+    params:
+      tools: auto
+      system_prompt: |
+        You're a smart assistant to create PR title and description.
+        Your main function is to analyze changes in the new branch, check contributing guidelines from repo_docs dataset and generate a title and description for the PR.
+        If there is .github/PULL_REQUEST_TEMPLATE.md file, you should use it for a template.

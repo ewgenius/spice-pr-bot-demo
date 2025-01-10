@@ -1,0 +1,42 @@
+name: pr
+
+on:
+  push:
+
+jobs:
+  check_pr:
+    runs-on: ubuntu-latest
+    outputs:
+      hasOpenPR: ${{ steps.check_pr.outputs.hasOpenPR }}
+
+    steps:
+      - name: Check existing PR for current branch
+        id: check_pr
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: pullRequests } = await github.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: context.ref
+            });
+            return { hasOpenPR: pullRequests.length > 0, prs: pullRequests };
+
+  create_pr:
+    runs-on: ubuntu-latest
+    needs: check_pr
+    if: ${{ needs.check_pr.outputs.hasOpenPR == 'false' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # - name: Install Spice
+      #   run: |
+      #     curl https://install.spiceai.org | /bin/bash
+
+      # - name: Run Spicepod
+      #   run: |
+      #     spicepod run -f .github/workflows/spicepod.yaml
