@@ -24,7 +24,7 @@ jobs:
         run: |
           branch=$(git rev-parse --abbrev-ref HEAD)
           pr_count=$(gh pr list --state open --head "$branch" --json number --jq 'length')
-          echo "::set-output name=hasOpenPR::$( [ $pr_count -gt 0 ] && echo true || echo false )"
+          echo "hasOpenPR=$( [ $pr_count -gt 0 ] && echo true || echo false )" >> $GITHUB_OUTPUT
 
   create_pr:
     runs-on: ubuntu-latest
