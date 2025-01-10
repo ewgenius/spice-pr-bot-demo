@@ -17,6 +17,8 @@ jobs:
 
       - name: Check existing PR for current branch
         id: check_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           branch=$(git rev-parse --abbrev-ref HEAD)
           pr_count=$(gh pr list --state open --head "$branch" --json number --jq 'length')
