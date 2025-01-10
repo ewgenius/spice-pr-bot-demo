@@ -67,6 +67,8 @@ jobs:
 
       - name: Call Spice runtime and parse response and create PR
         id: parse_response
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           response=$(curl -XPOST -s http://localhost:8090/v1/chat/completions -H "Content-Type: application/json" -d '{ "stream": false, "model": "gpt-4o", "response_format": { "type": "json_object" }, "messages": [{"role": "user", "content" : "summarize changes"}] }')
           content=$(echo $response | jq -r '.choices[0].message.content')
