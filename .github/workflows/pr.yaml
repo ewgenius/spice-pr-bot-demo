@@ -38,9 +38,9 @@ jobs:
       - name: Get branch diff
         run: |
           default_branch=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
-          git fetch origin $default_branch --depth=1
+          git fetch origin $default_branch --unshallow
           branch=$(git rev-parse --abbrev-ref HEAD)
-          git diff origin/$default_branch...$branch --patch --stat --output=diff.patch
+          git diff origin/$default_branch...origin/$branch --patch --stat --output=diff.patch
 
       - name: Install Spice
         run: |
@@ -66,6 +66,9 @@ jobs:
         timeout-minutes: 1
 
       - name: Call Spice runtime and parse response
+        id: parse_response
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           response=$(curl -XPOST -s http://localhost:8090/v1/chat/completions -H "Content-Type: application/json" -d '{ "stream": false, "model": "gpt-4o", "response_format": { "type": "json_object" }, "messages": [{"role": "user", "content" : "summarize changes"}] }')
           content=$(echo $response | jq -r '.choices[0].message.content')
@@ -74,13 +77,9 @@ jobs:
           description=$(echo $json_content | jq -r '.description')
           echo "Title: $title"
           echo "Description: $description"
-
-      - name: Create Pull Request
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
+          default_branch=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
           branch=$(git rev-parse --abbrev-ref HEAD)
-          gh pr create --title "$title" --body "$description" --head "$branch" --base main
+          gh pr create --title "$title" --body "$description" --head "$branch" --base "$default_branch"
 
       - name: Stop spice and check logs
         if: always()
