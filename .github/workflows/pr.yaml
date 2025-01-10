@@ -2,8 +2,10 @@ name: pr
 
 on:
   push:
-     branches-ignore:
+    branches-ignore:
       - main
+    tags-ignore:
+      - '*'
 
 jobs:
   check_pr:
@@ -12,19 +14,17 @@ jobs:
       hasOpenPR: ${{ steps.check_pr.outputs.hasOpenPR }}
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Check existing PR for current branch
         id: check_pr
-        uses: actions/github-script@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { data: pullRequests } = await github.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              head: context.ref
-            });
-            return { hasOpenPR: pullRequests.length > 0, prs: pullRequests };
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          branch=$(git rev-parse --abbrev-ref HEAD)
+          pr_count=$(gh pr list --state open --head "$branch" --json number --jq 'length')
+          echo "hasOpenPR=$( [ $pr_count -gt 0 ] && echo true || echo false )" >> $GITHUB_OUTPUT
 
   create_pr:
     runs-on: ubuntu-latest
@@ -35,10 +35,55 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # - name: Install Spice
-      #   run: |
-      #     curl https://install.spiceai.org | /bin/bash
+      - name: Get branch diff
+        run: |
+          default_branch=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
+          git fetch origin $default_branch --depth=1
+          branch=$(git rev-parse --abbrev-ref HEAD)
+          git diff origin/$default_branch...$branch --patch --stat --output=diff.patch
 
-      # - name: Run Spicepod
-      #   run: |
-      #     spicepod run -f .github/workflows/spicepod.yaml
+      - name: Install Spice
+        run: |
+          curl https://install.spiceai.org | /bin/bash
+
+      - name: Add Spice to PATH
+        run: |
+          echo "$HOME/.spice/bin" >> $GITHUB_PATH
+
+      - name: Run Spice
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$HOME/.spice/bin" >> $GITHUB_PATH
+          spice i ai
+          spice run &> spice.log &
+          sleep 5
+
+      - name: Wait for Spice runtime to be ready
+        run: |
+          bash -c 'while [[ "$(curl -s http://localhost:8090/health)" != "ok" ]]; do sleep 1; done' || false
+        timeout-minutes: 1
+
+      - name: Call Spice runtime and parse response
+        run: |
+          response=$(curl -XPOST -s http://localhost:8090/v1/chat/completions -H "Content-Type: application/json" -d '{ "stream": false, "model": "gpt-4o", "response_format": { "type": "json_object" }, "messages": [{"role": "user", "content" : "summarize changes"}] }')
+          content=$(echo $response | jq -r '.choices[0].message.content')
+          json_content=$(echo $content | jq -r '.')
+          title=$(echo $json_content | jq -r '.title')
+          description=$(echo $json_content | jq -r '.description')
+          echo "Title: $title"
+          echo "Description: $description"
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          branch=$(git rev-parse --abbrev-ref HEAD)
+          gh pr create --title "$title" --body "$description" --head "$branch" --base main
+
+      - name: Stop spice and check logs
+        if: always()
+        run: |
+          killall spice || true
+          cat spice.log
