@@ -7,6 +7,8 @@ datasets:
     name: repo_docs
     params:
       include: 'CONTRIBUTING.md; README.md; .github/PULL_REQUEST_TEMPLATE.md'
+    acceleration:
+      enabled: true
 
   - from: file:diff.patch
     name: diff
