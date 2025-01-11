@@ -12,7 +12,7 @@ This document provides the guidelines for how to contribute to the Spice.ai proj
 
 ## Instructions
 
-1. **Title**: Provide a concise summary of changes in one line.
+1. **Title**: Provide a concise summary of changes in one line. Prefix the title with the type of change, such as `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`, or `chore:`.
 2. **Description**: 
    - Use the `# 🗣 Description` section to include a brief summary of your pull request, detailing the changes and the reasons behind them.
 3. **Related Issues**: 
